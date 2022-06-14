@@ -12,3 +12,5 @@ def greet
 end
 
 greet
+
+binding.pry
