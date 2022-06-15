@@ -1,8 +1,9 @@
+require 'openfoodfacts'
 require_relative '../config/environment'
 
 def greet
     system("clear")
-    puts <<-'EOF'
+    puts <<-EOF
     ___             _   _                           
     | __|__  ___  __| | | |   ___  __ _ __ _ ___ _ _ 
     | _/ _ \/ _ \/ _` | | |__/ _ \/ _` / _` / -_) '_|
@@ -46,17 +47,26 @@ def ask_for_user
     end
 end
 
+def print_user_foods(user)
+    if user.foods.count == 0
+        puts "You haven't added any products yet."
+        ask_barcode
+    end
+end
+
 def ask_barcode
     puts "Please enter a barcode: "
     barcode = gets.chomp
-    OpenFoodFacts.get_by_barcode(barcode)
+    product = Openfoodfacts::Product.get(barcode, locale: "world")
+    puts product.product_name
 end
 
 old_logger = ActiveRecord::Base.logger
 ActiveRecord::Base.logger = nil
+Openfoodfacts::Product.disable_warnings
 
 greet
 user = ask_for_user
 greet
 puts "Welcome #{user.name}!"
-
+print_user_foods(user)

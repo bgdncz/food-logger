@@ -20,9 +20,9 @@ ActiveRecord::Schema.define(version: 6) do
     t.string "name"
   end
 
-  create_table "categories_foods", force: :cascade do |t|
-    t.integer "food_id"
-    t.integer "category_id"
+  create_table "categories_foods", id: false, force: :cascade do |t|
+    t.integer "category_id", null: false
+    t.integer "food_id", null: false
   end
 
   create_table "foods", force: :cascade do |t|
@@ -31,13 +31,13 @@ ActiveRecord::Schema.define(version: 6) do
     t.integer "brand_id"
   end
 
-  create_table "users", force: :cascade do |t|
-    t.string "name"
+  create_table "foods_users", id: false, force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "food_id", null: false
   end
 
-  create_table "users_foods", force: :cascade do |t|
-    t.integer "food_id"
-    t.integer "user_id"
+  create_table "users", force: :cascade do |t|
+    t.string "name"
   end
 
 end

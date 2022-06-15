@@ -1,3 +1,3 @@
 class Category < ActiveRecord::Base
-    has_many :foods, through: :categories_foods
+    has_and_belongs_to_many :foods
 end
