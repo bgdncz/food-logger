@@ -3,8 +3,7 @@ class CreateFoods < ActiveRecord::Migration[4.2]
       create_table :foods do |t|
         t.string :name
         t.integer :barcode
-        t.references :category
-        t.references :keyword
+        t.references :brand
       end
     end
   end 

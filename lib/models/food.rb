@@ -1,5 +1,5 @@
 class Food < ActiveRecord::Base
-    belongs_to :user
-    has_many :keywords
-    has_many :categories
+    has_many :categories, through: :categories_foods
+    has_many :users, through: :users_foods
+    belongs_to :brand
 end
