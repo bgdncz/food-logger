@@ -1,5 +1,5 @@
 class User < ActiveRecord::Base
-    ACTION_CHOICES = [{name: "Log food item", value: :log_new}, {name: "List foods", value: :print_foods}, {name: "List brands", value: :print_brands}, {name: "List categories", value: :print_categories}, {name: "Change name", value: :change_name} , {name: "Delete profile", value: :delete_profile}]
+    ACTION_CHOICES = [{name: "Log food item", value: :log_new}, {name: "List foods", value: :print_foods}, {name: "List brands", value: :print_brands}, {name: "List categories", value: :print_categories}, {name: "Change name", value: :change_name} , {name: "Delete profile", value: :delete_profile}, {name: "Quit", value: :quit}]
 
     has_and_belongs_to_many :foods
     has_many :categories, through: :foods
@@ -12,8 +12,12 @@ class User < ActiveRecord::Base
 
     def prompt_actions
         prompt = TTY::Prompt.new
-        action = prompt.select("What would you like to do?", ACTION_CHOICES)
+        action = prompt.select("What would you like to do?", ACTION_CHOICES, per_page: 10)
+        if action == :quit
+            return :quit
+        end
         self.send(action)
+        self.reload unless action == :delete_profile
     end
 
     # barcode = product._id
@@ -32,13 +36,13 @@ class User < ActiveRecord::Base
             puts "Product with barcode #{barcode} not found."
             prompt.keypress("Press any key to continue")
         else
-            foods << Food.create_from_product(product)
+            Food.create_from_product(product, self)
         end
     end
 
     def print_foods
+        prompt = TTY::Prompt.new
         if foods.count == 0
-            prompt = TTY::Prompt.new
             puts "You haven't added any products yet."
             prompt.keypress("Press any key to continue")
         else
@@ -50,41 +54,37 @@ class User < ActiveRecord::Base
                 t.add_column("Barcode", &:barcode)
             end
             puts table.pack
-            Food.prompt_actions
-            #table = TTY::Table.new header: ['Name', 'Brand', 'Categories', 'Barcode'], rows: rows
-            #table.render(:unicode, multiline: true)
+            Food.prompt_actions self
         end
     end
 
     def print_brands
+        prompt = TTY::Prompt.new
         if foods.count == 0
-            prompt = TTY::Prompt.new
             puts "You haven't added any products yet."
             prompt.keypress("Press any key to continue")
-            greet
-            prompt_actions
         else
             table = Tabulo::Table.new(brands, title: "Your favorite brands") do |t|
                 t.add_column("Name", &:name)
                 t.add_column("No. of products") {|brand| brand.foods.count}
             end
             puts table.pack
+            prompt.keypress("Press any key to continue")
         end
     end
 
     def print_categories
+        prompt = TTY::Prompt.new
         if foods.count == 0
-            prompt = TTY::Prompt.new
             puts "You haven't added any products yet."
             prompt.keypress("Press any key to continue")
-            greet
-            prompt_actions
         else
             table = Tabulo::Table.new(categories, title: "Your food categories") do |t|
                 t.add_column("Name", &:name)
                 t.add_column("No. of products") {|category| category.foods.count}
             end
             puts table.pack
+            prompt.keypress("Press any key to continue")
         end
     end
 
@@ -99,5 +99,9 @@ class User < ActiveRecord::Base
         if prompt.yes?("Are you sure you want to delete your profile?")
             self.delete
         end
+    end
+
+    def quit
+        return :quit
     end
 end

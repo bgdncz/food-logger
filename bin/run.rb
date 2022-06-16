@@ -6,6 +6,6 @@ app = Console.new
 user = app.pick_user
 loop do
     user.greet
-    user.prompt_actions
-    break if user.frozen?
+    res = user.prompt_actions
+    break if user.frozen? || res == :quit
 end
