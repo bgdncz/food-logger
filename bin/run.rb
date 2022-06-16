@@ -1,21 +1,11 @@
 require 'openfoodfacts'
-require 'terminal-table'
+require 'tabulo'
 require_relative '../config/environment'
 
-def ask_barcode
-    loop do
-        puts "Please enter a barcode: "
-        barcode = gets.chomp
-        product = Openfoodfacts::Product.get(barcode, locale: "world")
-        if product.nil?
-            "Product with barcode #{barcode} not found."
-        else
-            return product
-        end
-    end
+app = Console.new
+user = app.pick_user
+loop do
+    user.greet
+    user.prompt_actions
+    break if user.frozen?
 end
-
-Console.greet
-user = Console.pick_user
-user.greet
-user.prompt_actions
