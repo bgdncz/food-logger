@@ -22,6 +22,7 @@ class User < ActiveRecord::Base
     end
 
     def log_barcode
+        prompt = TTY::Prompt.new
         barcode = prompt.ask("Please enter a barcode:") { |q| q.validate /\d+/ }
         product = Openfoodfacts::Product.get(barcode, locale: "world")
         if product.nil?
