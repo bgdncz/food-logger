@@ -1,5 +1,6 @@
 class User < ActiveRecord::Base
     ACTION_CHOICES = [{name: "Log food item", value: :log_new}, {name: "List foods", value: :print_foods}, {name: "List brands", value: :print_brands}, {name: "List categories", value: :print_categories}, {name: "Change name", value: :change_name} , {name: "Delete profile", value: :delete_profile}, {name: "Quit", value: :quit}]
+    BARCODE_SEARCH = [{name: "Look up by barcode", value: :log_barcode}, {name: "Search by name", value: :search}, {name: "Go back", value: :back}]
 
     has_and_belongs_to_many :foods
     has_many :categories, through: :foods
@@ -20,24 +21,31 @@ class User < ActiveRecord::Base
         self.reload unless action == :delete_profile
     end
 
-    # barcode = product._id
-    # brand = product.brands
-    # categories = "en:Snacks, en:Salty snacks"
-    # "manufacturing_places"=>"Bulgaria"
-    #nutriments "carbohydrates_100g"=>6
-
-
-    def log_new
-        prompt = TTY::Prompt.new
+    def log_barcode
         barcode = prompt.ask("Please enter a barcode:") { |q| q.validate /\d+/ }
         product = Openfoodfacts::Product.get(barcode, locale: "world")
-        #binding.pry
         if product.nil?
             puts "Product with barcode #{barcode} not found."
             prompt.keypress("Press any key to continue")
         else
             Food.create_from_product(product, self)
         end
+    end
+
+    def search
+        prompt = TTY::Prompt.new
+        name = prompt.ask("Please enter product name:")
+        products = Openfoodfacts::Product.search(name, locale: 'world', page_size: 10)
+        product_choices = products.map {|product| {name: product.product_name, value: product._id}}
+        barcode = prompt.select("Please select food item:", product_choices, per_page: 10)
+        product = Openfoodfacts::Product.get(barcode, locale: "world")
+        Food.create_from_product(product, self)
+    end
+
+    def log_new
+        prompt = TTY::Prompt.new
+        action = prompt.select("", BARCODE_SEARCH)
+        self.send(action) unless action == :back
     end
 
     def print_foods
